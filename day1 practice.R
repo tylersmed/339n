@@ -63,3 +63,17 @@ my_numeric_vertor[2:4]
 
 vals_to_search = c(6, 24)
 vals_to_search %in% my_numeric_vertor
+
+my_function = function(s, ss) {
+  indicies = c()
+  for (i in 1:nchar(s)) {
+    temp_ss = substr(s, i, i+nchar(ss)-1)
+    if (ss == temp_ss) {
+      indicies <- c(indicies, i)
+    }
+  }
+  return(indicies)
+}
+
+x = my_function("GATATATGCATATACTT", "ATAT")
+print(x)
