@@ -7,6 +7,14 @@
 ## Write a function that will take a sequence 
 ## The function should return a GC ratio
 
+get_gc_ratio = function(s) {
+  split_s = unlist(strsplit(s, ""))
+  gc_count = sum(split_s == "G" | split_s == "C")
+  return(gc_count/length(split_s))
+}
+
+print(get_gc_ratio("ACCTGCA")) # 0.571
+
 ## Q2 - 4pt
 ## Every amino acid in a protein is encoded by three nucleotides. 
 ## Execute the following two lines to get a list of all codons and corresponding amino acids
@@ -14,7 +22,19 @@ codons = c('UUU','UUC','UUA','UUG','UCU','UCC','UCA','UCG','UAU','UAC','UAA','UA
 amino_acids = c('F','F','L','L','S','S','S','S','Y','Y','*','*','C','C','*','W','L','L','L','L','P','P','P','P','H','H','Q','Q','R','R','R','R','I','I','I','M','T','T','T','T','N','N','K','K','S','S','R','R','V','V','V','V','A','A','A','A','D','D','E','E','G','G','G','G' )
 
 ## Write a function that will take a coding region sequence as input. You can assume the sequence is starting with AUG and is a multiple of three nucleotides. 
-## The output should be the corresponding protein sequence. 
+## The output should be the corresponding protein sequence.
+translate_codons = function(s) {
+  protein = ""
+  for (i in seq(1, nchar(s), 3)) {
+    codon = substr(s, i, i+2)
+    amino_acid = amino_acids[codons == codon]
+    if (amino_acid == '*') {break}
+    protein = paste(protein, amino_acid, sep="")
+  }
+  return(protein)
+}
+
+print(translate_codons("AUGUUUUCUUAGUCU")) # MFS (stop codon UAG in middle)
 
 ## Q3 - 4pt
 ## R has powerful plotting options available. 
@@ -23,6 +43,7 @@ amino_acids = c('F','F','L','L','S','S','S','S','Y','Y','*','*','C','C','*','W',
 ## Let's first install the dslabs package
 install.packages("dslabs")
 library(dslabs)
+x <- installed.packages(); x[ is.na(x[,"Priority"]), c("Package", "Version")]
 ## This package has a number of interesting datasets
 ## We can load an example for simple plotting
 data(gapminder)
