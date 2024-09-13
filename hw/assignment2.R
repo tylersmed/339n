@@ -54,5 +54,17 @@ head ( gapminder)
 str (gapminder)
 ## Given this data frame let's extract the data from 2015 into a new data frame
 gapminder_2015 = gapminder[gapminder$year == 2015 ,  ]
+
 ### plot the life expectancy (x axis) and infant mortality (y axis) using the data from 2015(2 pts).  
 ### make a histogram of distribution of Fertility using the data from 2015 (2pts).
+plot(gapminder_2015$life_expectancy, 
+     gapminder_2015$infant_mortality,
+     main = "Infant Mortality vs Life Expectancy in 2015",
+     ylab = "Infant Mortality",
+     xlab = "Life Expectancy")
+
+hist(gapminder_2015$fertility,
+     main = "Fertility Rates in 2015",
+     xlab = "Fertility Rate",
+     breaks = 10)
+
