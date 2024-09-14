@@ -43,7 +43,6 @@ print(translate_codons("AUGUUUUCUUAGUCU")) # MFS (stop codon UAG in middle)
 ## Let's first install the dslabs package
 install.packages("dslabs")
 library(dslabs)
-x <- installed.packages(); x[ is.na(x[,"Priority"]), c("Package", "Version")]
 ## This package has a number of interesting datasets
 ## We can load an example for simple plotting
 data(gapminder)
@@ -66,5 +65,6 @@ plot(gapminder_2015$life_expectancy,
 hist(gapminder_2015$fertility,
      main = "Fertility Rates in 2015",
      xlab = "Fertility Rate",
+     ylab = "Number of Countries",
      breaks = 10)
 
