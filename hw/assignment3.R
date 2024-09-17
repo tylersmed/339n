@@ -23,9 +23,9 @@ global_align = function(seq1, seq2, match_score = 3, mismatch_score = -10, gap_o
   for (i in 1:(m+1)) {
     for (j in 1:(n+1)) {
       if (i == 1) {
-        score_matrix[i,j] = gap_open * j
+        score_matrix[i,j] = gap_open * (j-1)
       } else if (j == 1) {
-        score_matrix[i, j] = gap_open * i
+        score_matrix[i, j] = gap_open * (i-1)
       } else {
         match = score_matrix[i-1, j-1] + ifelse(substr(seq1, i-1, i-1) == substr(seq2, j-1, j-1), match_score, mismatch_score)
         gap_right = score_matrix[i, j-1] + gap_open
@@ -35,7 +35,47 @@ global_align = function(seq1, seq2, match_score = 3, mismatch_score = -10, gap_o
     }
   }
   print(score_matrix)
+  # trace the matrix back
+  top_seq = traceback_matrix(score_matrix, seq1, m+1, n+1, T)
+  bottom_seq = traceback_matrix(score_matrix, seq2, m+1, n+1, F)
+  print(top_seq)
+  print(bottom_seq)
+  
 }
 
+traceback_matrix = function(score_matrix, seq, i, j, top_seq) {
+  if (i==1 && j==1) {
+    return('')
+  }
+  
+  current = score_matrix[i, j]
+  if (i == 1) {
+    # Only possible to come from the left
+    return(paste(traceback_matrix(score_matrix, seq, i, j-1, top_seq), "_"))
+  } else if (j == 1) {
+    # Only possible to come from above
+    return(paste(traceback_matrix(score_matrix, seq, i-1, j, top_seq), "_"))
+  }
+  
+  # Possible directions: diagonal, left, up
+  diag = score_matrix[i-1, j-1]
+  left = score_matrix[i, j-1]
+  up = score_matrix[i-1, j]
+  print(paste(current,diag, left, up))
+  
+  if (current == diag+3 | current == diag-10) {
+    return(paste(traceback_matrix(score_matrix, seq, i-1, j-1, top_seq), substr(seq, i-1, i-1)))
+  } else if (top_seq) {
+    if (current == left+3) {
+      return(paste(traceback_matrix(score_matrix, seq, i, j-1, top_seq), substr(seq, i-1, i-1)))
+    } else {
+      return(paste(traceback_matrix(score_matrix, seq, i, j-1, top_seq), "_"))
+    } else if (current == up+3) {
+      return(paste(traceback_matrix(score_matrix, seq, i-1, j, top_seq), substr(seq, j-1, j-1)))
+    } else {
+      return(paste(traceback_matrix(score_matrix, seq, i-1, j, top_seq), "_"))
+    }
+  }
+}
 
 global_align("ATTAGC","ATTCAGG")
