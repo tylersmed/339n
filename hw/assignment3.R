@@ -36,46 +36,68 @@ global_align = function(seq1, seq2, match_score = 3, mismatch_score = -10, gap_o
   }
   print(score_matrix)
   # trace the matrix back
-  top_seq = traceback_matrix(score_matrix, seq1, m+1, n+1, T)
-  bottom_seq = traceback_matrix(score_matrix, seq2, m+1, n+1, F)
-  print(top_seq)
-  print(bottom_seq)
+  directions = traceback_matrix(score_matrix, m+1, n+1)
+  directions = gsub(" ", "", directions)
+  print(directions)
+  translated = translate_directions(directions, seq1, seq2)
+  print(translated)
   
 }
 
-traceback_matrix = function(score_matrix, seq, i, j, top_seq) {
+# Recursively trace back the matrix and return a string of the directions to take
+traceback_matrix = function(score_matrix, i, j) {
   if (i==1 && j==1) {
-    return('')
+    return()
   }
-  
   current = score_matrix[i, j]
   if (i == 1) {
     # Only possible to come from the left
-    return(paste(traceback_matrix(score_matrix, seq, i, j-1, top_seq), "_"))
+    return(paste(traceback_matrix(score_matrix, i, j-1), " L"))
   } else if (j == 1) {
     # Only possible to come from above
-    return(paste(traceback_matrix(score_matrix, seq, i-1, j, top_seq), "_"))
+    return(paste(traceback_matrix(score_matrix, i-1, j), " D"))
   }
   
   # Possible directions: diagonal, left, up
   diag = score_matrix[i-1, j-1]
   left = score_matrix[i, j-1]
   up = score_matrix[i-1, j]
-  print(paste(current,diag, left, up))
-  
-  if (current == diag+3 | current == diag-10) {
-    return(paste(traceback_matrix(score_matrix, seq, i-1, j-1, top_seq), substr(seq, i-1, i-1)))
-  } else if (top_seq) {
-    if (current == left+3) {
-      return(paste(traceback_matrix(score_matrix, seq, i, j-1, top_seq), substr(seq, i-1, i-1)))
-    } else {
-      return(paste(traceback_matrix(score_matrix, seq, i, j-1, top_seq), "_"))
-    } else if (current == up+3) {
-      return(paste(traceback_matrix(score_matrix, seq, i-1, j, top_seq), substr(seq, j-1, j-1)))
-    } else {
-      return(paste(traceback_matrix(score_matrix, seq, i-1, j, top_seq), "_"))
-    }
+
+  if (current == diag-10 | current == diag+3) {
+    return(paste(traceback_matrix(score_matrix, i-1, j-1), "X"))
+  } else if (current == left-3) {
+    return(paste(traceback_matrix(score_matrix, i, j-1), "L"))
+  } else {
+    return(paste(traceback_matrix(score_matrix, i-1, j), "D"))
   }
 }
 
+#translate directions to alignment
+translate_directions = function(directions, seq1, seq2) {
+  seq1_aligned = ""
+  seq2_aligned = ""
+  i = 1
+  n = 1
+  directions = unlist(strsplit(directions, ""))
+  for (direction in directions) {
+    if (direction == "X") {
+      seq1_aligned = paste(seq1_aligned, substr(seq1, i, i), sep="")
+      seq2_aligned = paste(seq2_aligned, substr(seq2, n, n), sep="")
+      i = i + 1
+      n = n + 1
+    } else if (direction == "L") {
+      seq1_aligned = paste(seq1_aligned, "_", sep="")
+      seq2_aligned = paste(seq2_aligned, substr(seq2, n, n), sep="")
+      n = n + 1
+    } else if (direction == "D") {
+      seq1_aligned = paste(seq1_aligned, substr(seq1, i, i), sep="")
+      seq2_aligned = paste(seq2_aligned, "_", sep="")
+      i = i + 1
+    }
+  }
+  
+  return(list(seq1_aligned, seq2_aligned))
+}
+
 global_align("ATTAGC","ATTCAGG")
+
