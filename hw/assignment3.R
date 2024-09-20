@@ -18,7 +18,7 @@
 global_align = function(seq1, seq2, match_score = 3, mismatch_score = -10, gap_open = -3) {
   m = nchar(seq1)
   n = nchar(seq2)
-  score_matrix = matrix(-Inf, nrow = m+1, ncol = n+1)
+  score_matrix = matrix(0, nrow = m+1, ncol = n+1)
   # fill out the matrix
   for (i in 1:(m+1)) {
     for (j in 1:(n+1)) {
@@ -41,7 +41,6 @@ global_align = function(seq1, seq2, match_score = 3, mismatch_score = -10, gap_o
   print(directions)
   translated = translate_directions(directions, seq1, seq2)
   print(translated)
-  
 }
 
 # Recursively trace back the matrix and return a string of the directions to take
@@ -59,16 +58,18 @@ traceback_matrix = function(score_matrix, i, j) {
   }
   
   # Possible directions: diagonal, left, up
-  diag = score_matrix[i-1, j-1]
-  left = score_matrix[i, j-1]
-  up = score_matrix[i-1, j]
+  diag = (score_matrix[i-1, j-1]-10 == current) | (score_matrix[i-1, j-1]+3 == current)
+  left = score_matrix[i, j-1]-3 == current
+  up = score_matrix[i-1, j]-3 == current
+  print(paste(diag, left, up))
 
-  if (current == diag-10 | current == diag+3) {
-    return(paste(traceback_matrix(score_matrix, i-1, j-1), "X"))
-  } else if (current == left-3) {
+  #
+  if (up) {
+    return(paste(traceback_matrix(score_matrix, i-1, j), "D"))
+    } else if (left) {
     return(paste(traceback_matrix(score_matrix, i, j-1), "L"))
   } else {
-    return(paste(traceback_matrix(score_matrix, i-1, j), "D"))
+    return(paste(traceback_matrix(score_matrix, i-1, j-1), "X"))
   }
 }
 
@@ -99,5 +100,5 @@ translate_directions = function(directions, seq1, seq2) {
   return(list(seq1_aligned, seq2_aligned))
 }
 
-global_align("ATTAGC","ATTCAGG")
+global_align("CACGTGATCAA","AGCATCGGTTG")
 
