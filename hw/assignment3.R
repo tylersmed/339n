@@ -34,42 +34,41 @@ global_align = function(seq1, seq2, match_score = 3, mismatch_score = -10, gap_o
       }
     }
   }
-  print(score_matrix)
   # trace the matrix back
-  directions = traceback_matrix(score_matrix, m+1, n+1)
+  directions = traceback_matrix(score_matrix, m+1, n+1, seq1, seq2)
   directions = gsub(" ", "", directions)
-  print(directions)
   translated = translate_directions(directions, seq1, seq2)
-  print(translated)
+  print(translated[[1]])
+  print(translated[[2]])
+  print(paste("Score:", score_matrix[m+1, n+1]))
 }
 
 # Recursively trace back the matrix and return a string of the directions to take
-traceback_matrix = function(score_matrix, i, j) {
+traceback_matrix = function(score_matrix, i, j, seq1, seq2, match, mismatch, gap) {
   if (i==1 && j==1) {
-    return()
+    return("")
   }
   current = score_matrix[i, j]
   if (i == 1) {
     # Only possible to come from the left
-    return(paste(traceback_matrix(score_matrix, i, j-1), " L"))
+    return(paste(traceback_matrix(score_matrix, i, j-1, seq1, seq2, match, mismatch, gap), " L"))
   } else if (j == 1) {
     # Only possible to come from above
-    return(paste(traceback_matrix(score_matrix, i-1, j), " D"))
+    return(paste(traceback_matrix(score_matrix, i-1, j, seq1, seq2, match, mismatch, gap), " D"))
   }
   
   # Possible directions: diagonal, left, up
-  diag = (score_matrix[i-1, j-1]-10 == current) | (score_matrix[i-1, j-1]+3 == current)
+  diag = (substr(seq1, i-1, i-1) == substr(seq2, j-1, j-1) && current == score_matrix[i-1, j-1] + 3) ||
+    (substr(seq1, i-1, i-1) != substr(seq2, j-1, j-1) && current == score_matrix[i-1, j-1] - 10)
   left = score_matrix[i, j-1]-3 == current
   up = score_matrix[i-1, j]-3 == current
-  print(paste(diag, left, up))
 
-  #
-  if (up) {
-    return(paste(traceback_matrix(score_matrix, i-1, j), "D"))
+  if (diag) {
+    return(paste(traceback_matrix(score_matrix, i-1, j-1, seq1, seq2, match, mismatch, gap), "X"))
     } else if (left) {
-    return(paste(traceback_matrix(score_matrix, i, j-1), "L"))
+    return(paste(traceback_matrix(score_matrix, i, j-1, seq1, seq2, match, mismatch, gap), "L"))
   } else {
-    return(paste(traceback_matrix(score_matrix, i-1, j-1), "X"))
+    return(paste(traceback_matrix(score_matrix, i-1, j, seq1, seq2, match, mismatch, gap), "D"))
   }
 }
 
@@ -100,5 +99,5 @@ translate_directions = function(directions, seq1, seq2) {
   return(list(seq1_aligned, seq2_aligned))
 }
 
-global_align("CACGTGATCAA","AGCATCGGTTG")
+global_align("TGCATC","CGTATC", match_score=3, mismatch_score=-10, gap_open=-3)
 
