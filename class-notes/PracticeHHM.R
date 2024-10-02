@@ -64,8 +64,9 @@ viterbiManual = function(obsSeq) {
 viterbiManual(obsSeq)
 
 # Using Libraries
-#install.packages("HMM")
-library(HMM)
+library("HMM")
 
-weatherHHM = HHM.init(states, observables, initProbs, transProbs, emissionProbs)
+weatherHHM = initHMM(states, observables, initProbs, transProbs, emissionProbs)
 forward(weatherHHM, obsSeq)
+weatherHHM.viterbi = viterbi(weatherHHM, obsSeq)
+weatherHHM.viterbi

@@ -9,6 +9,16 @@
     ]
   },
   "Packages": {
+    "HMM": {
+      "Package": "HMM",
+      "Version": "1.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "82d8903e12931740eda83f74d7c3b6b7"
+    },
     "renv": {
       "Package": "renv",
       "Version": "1.0.7",
