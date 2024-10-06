@@ -45,7 +45,7 @@ symbols_list = paste(symbols, collapse = "")
 df_cleaned = df[grepl(paste0("^[" , symbols_list, "]*$"), df$seq),]
 
 ## Print the number of rows and columns remaining after cleaning.
-print(paste("Rows:", dim(df_cleaned)[1], "Columns:", dim(df_cleaned)[2]))
+print(paste("Rows:", nrow(df_cleaned), "Columns:", ncol(df_cleaned)))
 
 ##Data Splitting: Split the cleaned dataset into two parts: The training set should contain 10% of the sequences.
 ##The test set should contain the remaining 90% to assess the performance of your HMM in predicting secondary structure.
@@ -55,10 +55,13 @@ print(paste("Rows:", dim(df_cleaned)[1], "Columns:", dim(df_cleaned)[2]))
 ?set.seed
 set.seed(3)
 
+sample = sample(c(TRUE, FALSE), nrow(df_cleaned), replace = TRUE, prob = c(0.1, 0.9))
+train = df_cleaned[!sample,]
+test = df_cleaned[sample,]
+
 ## Q3 (4 points)
 
 ## Inferring HMM Parameters:  Use the training data to infer the parameters of the HMM.
-
 ## Specifically, use the sst3 and seq columns of the dataset to determine: Initial probabilities, Transition probabilities, Emission probabilities
 ## Write a function that takes the training data as input and returns a list with the following named elements:
 
@@ -67,17 +70,52 @@ set.seed(3)
 ##"transition_probs"
 
 ##You will use the following symbols and states:
-
 symbols = c("A", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "V", "W", "Y")
-
 states = c("C", "E", "H")
 
 ## Your function should output a list structured as:
-
 ## list ( initial_probs = ...,       # A vector of initial state probabilities
 ## emission_probs = ...,      # A matrix of emission probabilities
 ## transition_probs = ...     # A matrix of transition probabilities)
 
-
-
 ## Note: Make sure to properly clean, preprocess, and validate your data to ensure accurate results in both this and future assignments
+
+# Function to calculate the initial, emission, and transition probabilities
+get_hmm_params = function(train, symbols, states) {
+  # Initialize the initial, emission, and transition probabilities
+  initial_probs = list(C = 0, E = 0, H = 0)
+  emission_probs = matrix(0, nrow = length(states), ncol = length(symbols), dimnames = list(states, symbols))
+  transition_probs = matrix(0, nrow = length(states), ncol = length(states), dimnames = list(states, states))
+  
+  # Calculate the initial probabilities
+  initial_state_counts = table(substr(train$sst3, 1, 1)) # get first char of sst3
+  for (state in states) {
+    if (state %in% names(initial_state_counts)) {
+      initial_probs[state] = initial_state_counts[state] / nrow(train)
+    }
+  }
+
+  # Calculate the emission probabilities
+  for (i in 1:nrow(train)) { # go over each row and split the seq and sst3 strings
+    seq = strsplit(as.character(train$seq[i]), "")[[1]]
+    sst3 = strsplit(as.character(train$sst3[i]), "")[[1]]
+    for (j in 1:length(seq)) { # go over each character in the seq and sst3 strings and add to the emission_probs matrix
+      emission_probs[sst3[j], seq[j]] = emission_probs[sst3[j], seq[j]] + 1
+    }
+  }
+  emission_probs = emission_probs / rowSums(emission_probs) # convert total counts to probabilities
+  
+  # Calculate the transition probabilities
+  for (i in 1:nrow(train)) { # go over each row and split the sst3 string
+    sst3 = strsplit(as.character(train$sst3[i]), "")[[1]]
+    for (j in 2:length(sst3)) { # go over each character in the sst3 string and add to the transition_probs matrix
+      transition_probs[sst3[j - 1], sst3[j]] = transition_probs[sst3[j - 1], sst3[j]] + 1
+    }
+  }
+  transition_probs = transition_probs / rowSums(transition_probs) # convert total counts to probabilities
+  
+  return(list(initial_probs = initial_probs, emission_probs = emission_probs, transition_probs = transition_probs))
+  
+}
+hmm_params = get_hmm_params(train, symbols = symbols, states = states)
+print(hmm_params)
