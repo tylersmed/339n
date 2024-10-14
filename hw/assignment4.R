@@ -169,16 +169,44 @@ print(paste("90th percentile:", quantile(test$accuracy, 0.9)))
 
 ## Q3 (4 points)  Low-Accuracy Predictions and Model Limitations
 ## Identify any test examples where the prediction accuracy is below 1%.
+test$low_accuracy = test$accuracy < 0.01
+low_accuracy_examples = test[which(test$low_accuracy == TRUE),]
+print(low_accuracy_examples)
+# my model did not have any instances where the accuracy was below 1%
+# I'll do this with instances below 5% accuracy instead to have something to analyze
 test$low_accuracy = test$accuracy < 0.05
 low_accuracy_examples = test[which(test$low_accuracy == TRUE),]
+print(low_accuracy_examples)
 
 ## List the pdb_ids (Protein Data Bank identifiers) of these examples.
+low_acc_pdb_ids = low_accuracy_examples$pdb_id
+print(low_acc_pdb_ids)
 ## Examine the predicted and actual secondary structure sequences for these examples.
+print(low_accuracy_examples[, c("seq", "sst3", "predicted_sst3")])
+
+
 
 ## For each of these low-accuracy examples, calculate the percentage of amino acids labeled as "E" (strand of a β-pleated sheet) in the actual secondary structure.
-## Plot the relationship between this "E" content percentage and the overall accuracy percentage of the prediction.
+## Plot the relationship between this "E" content percentage and the overall accuracy percentage of the 
 ## Calculate the correlation coefficient to assess the relationship between "E" content and prediction accuracy.
+low_accuracy_examples$E_content = sapply(strsplit(low_accuracy_examples$sst3, ""), function(x) sum(x == "E") / length(x))
+plot(low_accuracy_examples$E_content, low_accuracy_examples$accuracy, main = "E Content vs. Prediction Accuracy", xlab = "E Content Percentage", ylab = "Prediction Accuracy")
+cor(low_accuracy_examples$E_content, low_accuracy_examples$accuracy)
+
+# doing the same for all instances in test
+test$E_content = sapply(strsplit(test$sst3, ""), function(x) sum(x == "E") / length(x))
+plot(test$E_content, test$accuracy, main = "E Content vs. Prediction Accuracy", xlab = "E Content Percentage", ylab = "Prediction Accuracy")
+cor(test$E_content, test$accuracy)
+# Running the correlation test on instances with only low accuracy did not reveal any significant trends
+# However, when running the correlation test on all instances, there is a negative correlation between E content and prediction accuracy
 
 ## Provide insights into why the HMM might perform poorly for certain proteins.
+##    - The HMM might perform poorly for certain proteins due to the presence of non-standard amino acids in the sequences, which were not accounted for in the model.
+##    - The model might also struggle with proteins that have complex secondary structures or unique patterns that are not well-represented in the training data.
+
 ## Consider the biological characteristics of the "E" state and how it may affect the model's predictions.
+##    - The "E" state represents strands of a β-pleated sheet, which have a distinct structure and hydrogen bonding pattern compared to other secondary structure elements. 
+
 ## Discuss any limitations or assumptions of the Markov chain model that might contribute to these prediction challenges.
+##   - The Markov chain model assumes that the current state only depends on the previous state, which may not fully capture the complex interactions and dependencies in protein secondary structure.  
+##   - The model also assumes that the emission probabilities are independent of the state sequence, which may not hold true in real-world scenarios where certain amino acid sequences are more likely to occur in specific secondary structure elements.
