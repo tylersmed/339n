@@ -83,7 +83,7 @@ states = c("C", "E", "H")
 # Function to calculate the initial, emission, and transition probabilities
 get_hmm_params = function(train, symbols, states) {
   # Initialize the initial, emission, and transition probabilities
-  initial_probs = list(C = 0, E = 0, H = 0)
+  initial_probs = c(C = 0, E = 0, H = 0)
   emission_probs = matrix(0, nrow = length(states), ncol = length(symbols), dimnames = list(states, symbols))
   transition_probs = matrix(0, nrow = length(states), ncol = length(states), dimnames = list(states, states))
   
@@ -119,3 +119,66 @@ get_hmm_params = function(train, symbols, states) {
 }
 hmm_params = get_hmm_params(train, symbols = symbols, states = states)
 print(hmm_params)
+
+
+
+##############################################################
+##                         Part 2                           ##
+##############################################################
+
+
+
+##  In this assignment, we will apply the Viterbi and Forward Algorithms as discussed in class.
+##You will be working with the R package HMM to implement these concepts.
+## Please note that you will need to use the emission and transition probability tables that were generated in Homework 5.
+##If you missed that homework, please attend Yue's TA session on Monday for assistance.
+##Important: Ensure that your emission_probs and transition_probs matrices are structured correctly and are compatible with the initHMM function in the HMM package.
+
+## Q1 (4 points) Building and Evaluating the HMM
+## Review the Documentation: Refer to the documentation for the HMM package in R.
+## You can use ?HMM and ?initHMM for reference.
+## Using the emission and transition probabilities inferred in Homework 5, create an HMM using the initHMM function
+
+?initHMM
+my_hmm = initHMM(states, symbols, startProbs = hmm_params$initial_probs, transProbs = hmm_params$transition_probs, emissionProbs = hmm_params$emission_probs)
+
+##  For each sequence in the test dataset (use the seq column), use the HMM to predict the most likely path of hidden states.
+for (i in 1:nrow(test)) {
+  seq = strsplit(test$seq[i], "")
+  path = viterbi(my_hmm, seq[[1]])
+  test$predicted_sst3[i] = paste(path, collapse = "")
+}
+
+## Compare this predicted path to the actual values from the sst3 column (i.e., the true secondary structure states).
+print(head(test$predicted_sst3))
+print(head(test$sst3))
+## For each sequence in the test set, calculate the percentage of amino acids for which the predicted secondary structure matches the actual structure.  This will give you the prediction accuracy.
+for (i in 1:nrow(test)) {
+  test$accuracy[i] = sum(strsplit(test$predicted_sst3[i], "")[[1]] == strsplit(test$sst3[i], "")[[1]]) / nchar(test$sst3[i])
+}
+
+## Q2 (4 points) Analyzing Prediction Accuracy Distribution
+##   Calculate the distribution of the prediction accuracies across all examples in the test set.
+
+##Plot the distribution of these accuracy percentages.
+hist(test$accuracy, main = "Prediction Accuracy Distribution", xlab = "Accuracy Percentage", ylab = "Frequency")
+## Provide the following statistical measures for the distribution:Mean, Median, 90th percentile
+print(paste("Mean:", mean(test$accuracy)))
+print(paste("Median:", median(test$accuracy)))
+print(paste("90th percentile:", quantile(test$accuracy, 0.9)))
+
+## Q3 (4 points)  Low-Accuracy Predictions and Model Limitations
+## Identify any test examples where the prediction accuracy is below 1%.
+test$low_accuracy = test$accuracy < 0.05
+low_accuracy_examples = test[which(test$low_accuracy == TRUE),]
+
+## List the pdb_ids (Protein Data Bank identifiers) of these examples.
+## Examine the predicted and actual secondary structure sequences for these examples.
+
+## For each of these low-accuracy examples, calculate the percentage of amino acids labeled as "E" (strand of a β-pleated sheet) in the actual secondary structure.
+## Plot the relationship between this "E" content percentage and the overall accuracy percentage of the prediction.
+## Calculate the correlation coefficient to assess the relationship between "E" content and prediction accuracy.
+
+## Provide insights into why the HMM might perform poorly for certain proteins.
+## Consider the biological characteristics of the "E" state and how it may affect the model's predictions.
+## Discuss any limitations or assumptions of the Markov chain model that might contribute to these prediction challenges.
