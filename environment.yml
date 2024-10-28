@@ -1,3 +1,4 @@
 name: 339n
 channels:
   - defaults
+prefix: /home/tyler/anaconda3/envs/339n
