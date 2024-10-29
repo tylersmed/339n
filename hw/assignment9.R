@@ -60,7 +60,7 @@ library('pheatmap')
 
 cor_matrix = cor(rnaseq_counts, method = 'spearman')
 pheatmap(cor_matrix)
-# The strongest correlations exist between the repeats of the same gene. Here these are all in groups of 3.
+# The strongest correlations exist between the repeats of the same cell line. Here these are all in groups of 3.
 # The correlation matrix also shows a weakening correlation between genes as they move further apart.
 
 ## We will  extract the cell line names from the column names. 
@@ -84,7 +84,7 @@ dds <- DESeqDataSetFromMatrix (countData = rnaseq_counts,
 
 
 ##  We will then run DESeq to identify differentially expressed genes. Here, you will also need to install "apeglm" package. Please fill in coef 
-BiocManager::install("apeglm")
+#BiocManager::install("apeglm")
 
 ## Q3 - 3  pt
 ## We will  run DESeq to identify differentially expressed genes
@@ -93,11 +93,15 @@ resultsNames(dds)
 resLFC <- lfcShrink(dds, coef= "Variable_FALSE_vs_TRUE")
 resLFC <- resLFC[order(resLFC$pvalue),]
 summary(resLFC, alpha = 0.05)
+?lfcShrink
 
 ## In the above code, what does lfcShrink achieve? Explain in a few sentences.
-## Generate an MA-plot using resLFC
+#   -lfcShrink is applied to stabilize the log fold changes (LFC) for genes, especially for low-count genes. 
+#    This step reduces noise and allows for a more accurate comparison.
 
+## Generate an MA-plot using resLFC
 ?DESeq2::plotMA
+plotMA(resLFC)
 
 ## Q4 -3  pt
 ## Next we will create an interactive html to explore our results
@@ -120,4 +124,10 @@ resLFC
 ## KDM5C, PSMA8, KDM6A, ZFX, SMC1A
 ## Search what each of these genes are. 
 ## Do you notice any shared feature(s)? If so, can you speculate what our factor_of_interest was? 
+
+# All these genes are located on the X chromosome. They either have a role in transcriptional regulation
+# or are involved in cell division in some way. The factor of interest was likely related to a disorder in the cell
+# lines that was caused by a mutation on the X chromosome.
+
+
 
