@@ -1,0 +1,95 @@
+# Install Bioconductor packages
+if (!requireNamespace("BiocManager"))
+  install.packages("BiocManager")
+
+# Install airway dataset and other necessary packages
+BiocManager::install("airway")
+a#The airway dataset contains RNA-Seq read counts for human airway 
+#smooth muscle cells treated with dexamethasone.
+BiocManager::install("DESeq2")
+install.packages("pheatmap")
+install.packages("umap")
+install.packages("factoextra")
+
+
+
+library(airway)
+library(DESeq2)
+library(pheatmap)
+library(umap)
+library(ggplot2)
+library(factoextra)
+
+# Load the airway dataset
+data("airway")
+# Convert SummarizedExperiment to a data frame of counts
+airway_counts <- assay(airway)
+str(airway_counts)
+
+
+
+# Filter genes with low counts (keeping genes with at least 10 counts in at least 3 samples)
+filtered_counts <- airway_counts[rowSums(airway_counts >= 10) >= 3, ]
+
+# Convert counts to log2 counts per million (CPM)
+log_counts <- log2(filtered_counts + 1)
+
+# Calculate correlation matrix
+cor_matrix <- cor(log_counts, method = "spearman")
+
+pheatmap(cor_matrix, show_colnames = TRUE, show_rownames = TRUE, main = "Sample Correlation Heatmap")
+# Perform PCA on the transposed log-transformed data
+pca_result <- prcomp(t(log_counts), center = TRUE, scale = TRUE)
+
+# Visualize PCA
+fviz_pca_biplot(pca_result, repel = TRUE, col.var = "blue", col.ind = "red", title = "PCA Biplot")
+
+# Perform PCA on the transposed log-transformed data
+pca_result <- prcomp(t(log_counts), center = TRUE, scale = TRUE)
+
+# Convert PCA results to a dataframe
+pca_df <- as.data.frame(pca_result$x)
+sample_info <- colData(airway)
+pca_df$Condition <- as.factor(sample_info$dex)  # Add treatment condition as a label
+
+# Plot PCA with labeled conditions
+ggplot(pca_df, aes(x = PC1, y = PC2, color = Condition)) +
+  geom_point(size = 3) +
+  labs(title = "PCA of Airway Data", x = "PC1", y = "PC2") +
+  theme_minimal() +
+  scale_color_manual(values = c("untrt" = "blue", "trt" = "red"))  # Match levels exactly
+
+
+# Perform UMAP on transposed data
+umap_result <- umap(t(log_counts))
+
+# Perform UMAP with a lower number of neighbors
+umap_result <- umap(t(log_counts), config = umap.defaults)
+umap_result <- umap(t(log_counts), n_neighbors = 5)  # Set n_neighbors to a lower number, like 5 or 3
+
+umap_df <- as.data.frame(umap_result$layout)
+colnames(umap_df) <- c("UMAP1", "UMAP2")
+umap_df$Condition <- factor(sample_info$dex, levels = c("untrt", "trt"))
+
+# Plot UMAP with treatment condition labels
+ggplot(umap_df, aes(x = UMAP1, y = UMAP2, color = Condition)) +
+  geom_point(size = 3) +
+  labs(title = "UMAP of Airway Data with Treatment Labels", x = "UMAP1", y = "UMAP2") +
+  theme_minimal() +
+  scale_color_manual(values = c("untrt" = "blue", "trt" = "red"))
+
+# Perform K-means clustering with 2 clusters (assuming 2 conditions)
+set.seed(123) 
+kmeans_result <- kmeans(t(log_counts), centers = 2)
+
+# Add cluster assignments to UMAP data
+umap_df$Cluster <- factor(kmeans_result$cluster)
+
+# Plot UMAP with cluster assignments
+ggplot(umap_df, aes(x = UMAP1, y = UMAP2, color = Cluster)) +
+  geom_point(size = 3) +
+  labs(title = "UMAP with K-means Clustering", x = "UMAP1", y = "UMAP2") +
+  theme_minimal() +
+  scale_color_manual(values = c("blue", "red"))
+
+
